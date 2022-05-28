@@ -44,6 +44,12 @@ async function run() {
       res.send(parts);
     });
    
+    // get user
+    app.get('/user', async(req, res) =>{
+      const users = await userCollection.find().toArray();
+      res.send(users)
+    })
+
     app.get('/part/:id', async(req , res) =>{
       const id = req.params.id;
       const query = {_id: ObjectId(id)};
