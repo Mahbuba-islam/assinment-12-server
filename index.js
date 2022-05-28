@@ -38,6 +38,7 @@ async function run() {
     const orderCollection = client.db('computerParts').collection('orders');
     const userCollection = client.db('computerParts').collection('user');
     const reviewCollection = client.db('computerParts').collection('review');
+    const updateCollection = client.db('computerParts').collection('profile');
     
     app.get('/part', async (req, res) => {
       const query = {};
@@ -121,12 +122,44 @@ async function run() {
     // //    return res.status(403).send({meassage:'forbidden access'});
     // //  }
     // })
+          // get review
+    app.get('/review', async (req, res) => {
+      const query = {};
+      const cursor = reviewCollection.find(query);
+      const reviews = await cursor.toArray();
+      res.send(reviews);
+  });
+        //  updated profile
+    app.get('/profile', async (req, res) => {
+      const query = {};
+      const cursor = updateCollection.find(query);
+      const newUpdate = await cursor.toArray();
+      res.send(newUpdate);
+  });
+
 
 
   // add review
   app.post('/review',async(req, res)=>{
     const newReview = req.body;
     const result = await reviewCollection.insertOne(newReview);
+    res.send(result);
+  })
+
+
+  // add product
+  app.post('/part',async(req, res)=>{
+    const newReview = req.body;
+    const result = await partsCollection.insertOne(newReview);
+    res.send(result);
+  })
+
+
+ 
+    //  update profile
+  app.put('/profile',async(req, res)=>{
+    const newUpdate = req.body;
+    const result = await updateCollection.insertOne(newUpdate);
     res.send(result);
   })
 
