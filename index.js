@@ -31,6 +31,7 @@ function verifyJWT(req, res, next) {
 
 
 
+
 async function run() {
   try {
     await client.connect();
@@ -53,7 +54,7 @@ async function run() {
       res.send(users)
     })
 
-    app.get('/admin/:email', async(req, res) =>{
+    app.get('/admin/email', async(req, res) =>{
       const email = req.params.email;
       const user = await userCollection.findOne({email: email});
       const isAdmin = user.role === 'admin';
@@ -61,7 +62,7 @@ async function run() {
     })
 
    
-   app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+    app.put('/user/admin/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
        const requester = req.decoded.email;
       const requesterAccount = await userCollection.findOne({ email: requester });
@@ -71,31 +72,30 @@ async function run() {
           $set: { role: 'admin' },
         };
         const result = await userCollection.updateOne(filter, updateDoc);
-        res.send(result);
-      }
-      else{ 
-        res.status(403).send({message: 'forbidden'});
-       }
-      })
-    
-   app.put('/user/email', verifyJWT, async (req, res) => {
-      const email = req.params.email;
-      const user = req.body;
-     
-      // const requester = req.decoded.email;
-      // const requesterAccount = await userCollection.findOne({ email: requester });
-      // if (requesterAccount.role === 'admin') {
-        const filter = { email: email };
-        const options = {upsert:true}
-        const updateDoc = {
-          $set: user,
-        };
-        const result = await userCollection.updateOne(filter, updateDoc, options);
         res.send({result});
-      })
+       }} )
       // else{ 
       //   res.status(403).send({message: 'forbidden'});
-      // }
+      // }})
+    
+      app.put('/user/email', async (req, res) => {
+        const email = req.params.email;
+        const user = req.body;
+       
+        const requester = req.decoded.email;
+        const requesterAccount = await userCollection.findOne({ email: requester });
+        if (requesterAccount.role === 'admin') {
+          const filter = { email: email };
+          const options = {upsert:true}
+          const updateDoc = {
+            $set: user,
+          };
+          const result = await userCollection.updateOne(filter, updateDoc, options);
+          res.send({result});
+        }
+      else{ 
+        res.status(403).send({message: 'forbidden'});
+      }})
 
     
 
@@ -107,24 +107,22 @@ async function run() {
     })
     
     
-
-    app.get('/orders/:id', verifyJWT, async(req, res) =>{
+        ///purchase page api
+    app.get('/orders/:id', async(req, res) =>{
       const customer = req.query.customer;
-      // const decodedEmail = req.decoded.email
-      // if(customer === decodedEmail){
+    //  const decodedEmail = req.decoded.email
+    //   if(customer === decodedEmail){
         const query = {customer:customer};
       const orders = await orderCollection.find(query).toArray()
-      res.send(orders)
-      })
-    // return res.send(orders)
-    //   })
-    // //  else{
-    // //    return res.status(403).send({meassage:'forbidden access'});
-    // //  }
-    // })
+      return res.send(orders)
+      
+      // else{
+      //   return res.status(403).send({meassage:'forbidden access'});
+    })
+     
 
     //  payment by id
-    app.get('orders/:id', verifyJWT, async(req,res)=>{
+    app.get('/orders/:id', async(req,res)=>{
     const id = req.params.id;
     const query = {_id: ObjectId(id)};
     const order = await orderCollection.findOne(query);
@@ -184,26 +182,15 @@ async function run() {
 
     }) 
         // updated user
-    // app.post('/users', async(req,res)=>{
-    //   const users = req.body;
-    //   const result = await userCollection.insertOne(users);
-    //   res.send(result);
+    app.post('/users', async(req,res)=>{
+      const users = req.body;
+      const result = await userCollection.insertOne(users);
+      res.send(result);
 
-    // }) 
+    }) 
 
 
-    // app.put('/user/:email', async (req, res) => {
-    //   const email = req.params.email;
-    //   const user = req.body;
-    //   const filter = { email: email };
-    //   const options = { upsert: true };
-    //   const updateDoc = {
-    //     $set: user,
-    //   };
-    //   const result = await userCollection.updateOne(filter, updateDoc, options);
-    //   const token = jwt.sign({ email: email }, process.env.ACCESS_SECRET_TOKEN, { expiresIn: '2h' })
-    //   res.send({ result, token });
-    // })
+    
 
 
     app.put('/user/:email', async (req, res) => {
@@ -215,13 +202,18 @@ async function run() {
         $set: user,
       };
       const result = await userCollection.updateOne(filter, updateDoc, options);
-      const token = jwt.sign({ email: email }, process.env.ACCESS_SECRET_TOKEN, { expiresIn: '1h' })
-      res.send({ result, token });
+      const token = jwt.sign({ email: email }, process.env.ACCESS_SECRET_TOKEN, { expiresIn: '2h' })
+      res.send({ result, accessToken:token });
     })
 
 
 
-
+    app.delete('/order/:id', async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: ObjectId(id)}
+      const result = await orderCollection.deleteOne(query)
+      res.send(result);
+    })
      
 
    
